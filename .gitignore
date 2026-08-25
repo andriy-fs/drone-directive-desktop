@@ -14,3 +14,7 @@ release
 .idea
 .vscode/*
 !.vscode/extensions.json
+
+
+# docs
+.docs/internal
