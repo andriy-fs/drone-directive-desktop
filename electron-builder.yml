@@ -74,6 +74,14 @@ dmg:
   artifactName: ${productName}-${version}-${arch}.${ext}
 
 linux:
+  # A *directory* of sizes, not the single `build/icon.png` the other two
+  # platforms derive from. Given one PNG, electron-builder installs it into the
+  # one hicolor directory matching its pixel size — and `build/icon.png` is
+  # 1024x1024, a size the freedesktop hicolor theme does not declare (it stops at
+  # 512x512). The file lands on disk, no icon theme ever looks there, and the app
+  # shows up in the launcher with no icon at all. Named `NxN.png`, which is how
+  # electron-builder reads the size off each file.
+  icon: build/icons
   # Required by fpm for the .deb control file; it refuses to build without one.
   # Kept in step with package.json#author.
   maintainer: Andriy-fs <4tests.pl@gmail.com>
