@@ -100,6 +100,9 @@ npm run dist     # installers for the current platform, into release/
 
 `npm run lint` and `npm run type-check` must pass; CI runs both before building.
 
+Building a single target, cross-building for another OS, and what can and cannot
+be built where: [`.docs/building.md`](.docs/building.md).
+
 ---
 
 ## How it works

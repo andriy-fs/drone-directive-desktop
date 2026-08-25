@@ -32,6 +32,7 @@ API the renderer actually calls.
 - `npm run smoke` — boot the real protocol handler and assert the game renders
 - `npm run build` / `npm run type-check` / `npm run lint` / `npm run format`
 - `npm run dist` — installers for the current platform, into `release/`
+  (single targets and cross-building: `.docs/building.md`)
 
 **Before considering any change done, run `npm run lint`, `npm run type-check`
 and `npm run smoke` (all clean).** The smoke test is the one that matters: every
