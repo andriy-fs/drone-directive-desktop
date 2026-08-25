@@ -79,6 +79,17 @@ package lives in GitHub Packages, which has no anonymous read. See README
   `import type`), `noUnusedLocals`/`noUnusedParameters`.
 - Prettier settings match the game repo: single quotes, semicolons, 120 columns.
 
+## Skills
+
+- **project-context** — `.claude/skills/project-context/SKILL.md` — the decisions
+  that look like mistakes until you know why, the local-toolchain traps that
+  report the wrong cause, and the half of the publish chain that lives in the
+  game repository. Load it before touching the protocol handler, the CSP, icons,
+  packaging or the release workflow — and before diagnosing anything that builds
+  cleanly but does not run.
+- **dd-desktop-conventions** — `.claude/skills/dd-desktop-conventions/SKILL.md` —
+  English-only prose and single-line commit messages.
+
 ## Out of scope
 
 Auto-update, code signing and notarisation, store packaging, gamepad support,
