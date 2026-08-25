@@ -184,14 +184,30 @@ single instance only: launching a second copy focuses the first.
 
 ## Releases
 
-Push a `v*` tag. [`.github/workflows/release.yml`](.github/workflows/release.yml)
-builds Windows, macOS and Linux in a matrix and attaches the artifacts to a
-GitHub Release.
-
 ```bash
-npm version 0.2.0        # bumps package.json and tags
-git push --follow-tags
+npm run release -- patch        # or minor, major, or an explicit 1.4.0
 ```
+
+That is the whole thing: it checks the repository, runs lint, type-check and the
+smoke test, then bumps `package.json`, commits, tags and pushes — and pushing the
+tag is what starts
+[`.github/workflows/release.yml`](.github/workflows/release.yml), which builds
+Windows, macOS and Linux in a matrix and attaches the artifacts to a GitHub
+Release.
+
+Add `--dry-run` to run every check and stop before anything is written, or
+`--skip-smoke` if you have verified the build another way (the smoke test needs a
+display; under `xvfb-run` it does not).
+
+The script refuses to release from a branch other than `main`, from a dirty
+working tree, when `main` is behind origin, or when the tag already exists. Those
+are not ceremony: a tag builds three operating systems and publishes to a public
+release page, and undoing one means deleting a remote tag by hand.
+
+**Do not tag by hand.** `git tag v0.1.1` on its own leaves `package.json` at the
+old version, and every installer in the release then carries the _previous_
+version in its filename and in the `.deb` control file — so package managers see
+no upgrade. This has already happened once, in `v0.1.1`.
 
 Targets: Windows NSIS (x64) + portable · macOS DMG (arm64 + x64) ·
 Linux AppImage + deb.

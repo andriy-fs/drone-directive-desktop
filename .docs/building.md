@@ -151,11 +151,18 @@ disables _Chromium's_ process sandbox, which is unrelated to the renderer's
 `sandbox: true` in `webPreferences`, and is fine for verification but never for
 distribution. Installed packages set the bit correctly.
 
-## Before tagging a release
+## Cutting a release
+
+Do not run these checks by hand and then tag — `npm run release` does both, in
+order, and refuses to proceed if anything is off:
 
 ```bash
-npm run lint && npm run type-check && npm run smoke
+npm run release -- patch --dry-run     # every check, writes nothing
+npm run release -- patch               # ...then bump, tag and push
 ```
 
-CI runs the first two and then builds all three OSes; `smoke` is the one that
-actually boots the game, and it is worth running locally because CI does not.
+It runs `lint`, `type-check` and `smoke`. CI repeats the first two but **not**
+`smoke`, which is the only one that boots the game — that is why it runs here.
+
+See README § "Releases" for what the script refuses to do and why tagging by
+hand is a trap.

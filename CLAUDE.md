@@ -33,6 +33,10 @@ API the renderer actually calls.
 - `npm run build` / `npm run type-check` / `npm run lint` / `npm run format`
 - `npm run dist` — installers for the current platform, into `release/`
   (single targets and cross-building: `.docs/building.md`)
+- `npm run release -- patch|minor|major|x.y.z` — check, bump, tag, push. The only
+  supported way to cut a release; `--dry-run` stops before writing anything.
+  Never tag by hand — it desynchronises `package.json` from the tag and the
+  installers ship with the previous version in their names.
 
 **Before considering any change done, run `npm run lint`, `npm run type-check`
 and `npm run smoke` (all clean).** The smoke test is the one that matters: every
