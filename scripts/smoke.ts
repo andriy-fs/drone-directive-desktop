@@ -10,6 +10,13 @@
  *
  * Run with `npm run smoke` (needs a display; on a headless machine, `xvfb-run`).
  * Exits non-zero with the reason on failure.
+ *
+ * That script passes `--no-sandbox`, and it has to be on the command line rather
+ * than an `app.commandLine` switch here: Chromium checks its SUID sandbox helper
+ * while starting up, before this file runs, and aborts if the binary is not
+ * root-owned with mode 4755 — which it never is in a `node_modules` checkout.
+ * This is the *zygote* sandbox and is unrelated to `webPreferences.sandbox: true`
+ * below, which stays on and is part of what this test exercises.
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
