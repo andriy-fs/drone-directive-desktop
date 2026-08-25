@@ -29,9 +29,9 @@ jobs:
             name: macos
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -60,7 +60,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: installers-${{ matrix.name }}
           path: |
@@ -74,12 +74,12 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           path: installers
           merge-multiple: true
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: installers/*
           draft: false
