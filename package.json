@@ -2,7 +2,7 @@
   "name": "drone-directive-desktop",
   "version": "0.1.3",
   "private": true,
-  "description": "Drone Directive as an offline desktop app — an Electron shell around the published browser build.",
+  "description": "Drone Directive as an offline desktop app \u2014 an Electron shell around the published browser build.",
   "license": "GPL-3.0-or-later",
   "author": {
     "name": "Andriy-fs",
@@ -23,6 +23,7 @@
     "dist:dir": "npm run build && electron-builder --config electron-builder.yml --dir",
     "smoke": "npm run build && electron --no-sandbox out/scripts/smoke.js",
     "release": "npm run build && node out/scripts/release.js",
+    "game:update": "npm install @andriy-fs/drone-directive-client@latest --save-exact && npm run smoke",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",

@@ -5,6 +5,7 @@
  *   npm run release -- minor|major
  *   npm run release -- 1.4.0          # an explicit version
  *   npm run release -- patch --dry-run
+ *   npm run release -- patch --keep-game   # ship the pinned game, not the newest
  *
  * Pushing the tag is what builds installers for three operating systems and
  * publishes them to a GitHub Release, so most of this file is the checks that
@@ -27,6 +28,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
 const skipSmoke = args.includes('--skip-smoke');
+const keepGame = args.includes('--keep-game');
 const bump = args.find((a) => !a.startsWith('--'));
 
 function fail(message: string): never {
@@ -51,7 +53,10 @@ function run(command: string, argv: string[]): void {
 
 // --- what version are we going to ------------------------------------------
 
-const manifest = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { version: string };
+const manifest = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as {
+  version: string;
+  dependencies?: Record<string, string>;
+};
 const current = manifest.version;
 
 function nextVersion(from: string, how: string): string {
@@ -76,6 +81,22 @@ if (!bump) {
 
 const version = nextVersion(current, bump);
 const tag = `v${version}`;
+
+/** Numeric compare, not string — "1.10.0" is newer than "1.9.0" and sorts before it. */
+function isNewer(candidate: string, than: string): boolean {
+  const a = candidate.split('.').map(Number);
+  const b = than.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const [x = 0, y = 0] = [a[i], b[i]];
+    if (x !== y) return x > y;
+  }
+  return false;
+}
+
+// Only reachable by passing an explicit version — and then it is almost always a
+// typo. npm would take it, and the tag would sort below a release that already
+// exists.
+if (!isNewer(version, current)) fail(`${version} is not newer than the current ${current}`);
 
 console.log(`\nrelease: ${current} → ${version}  (tag ${tag})${dryRun ? '  [DRY RUN]' : ''}`);
 
@@ -104,6 +125,54 @@ if (git('ls-remote', '--tags', 'origin', tag) !== '') fail(`tag ${tag} already e
 
 const ahead = git('rev-list', '--count', 'origin/main..HEAD');
 console.log(`  branch main, clean, ${ahead} unpushed commit(s) — they go out with this release`);
+
+// --- preflight: which game are we shipping ---------------------------------
+
+/**
+ * The trap this catches: bump the game, publish it, then bump *this* version and
+ * assume the new release picked it up. It does not. The dependency is pinned
+ * exactly and `npm ci` installs what the lockfile says, so a desktop release cut
+ * without touching the pin ships the **old** game — and nothing about the build
+ * looks wrong.
+ *
+ * A version range would not help; `npm ci` ignores it. What helps is being told,
+ * at the moment the mistake is made, that the two versions have diverged.
+ */
+step('Checking the game build');
+
+const GAME_PACKAGE = '@andriy-fs/drone-directive-client';
+const pinned = manifest.dependencies?.[GAME_PACKAGE];
+
+if (!pinned) fail(`${GAME_PACKAGE} is not in dependencies`);
+if (!/^\d+\.\d+\.\d+$/.test(pinned)) {
+  fail(
+    `${GAME_PACKAGE} is "${pinned}" — it must be an exact version, not a range.\n` +
+      '  A desktop binary cannot be hotfixed, and the shell is coupled to the game through\n' +
+      '  PixiJS internals it does not control (see src/main/protocol.ts). Use `npm run game:update`.',
+  );
+}
+
+let latestGame = '';
+try {
+  latestGame = execFileSync('npm', ['view', GAME_PACKAGE, 'version'], { cwd: root, encoding: 'utf8' }).trim();
+} catch {
+  // Needs NODE_AUTH_TOKEN, and the registry can simply be unreachable. Not worth
+  // blocking a release over — but the operator has to know the check did not run.
+}
+
+if (latestGame === '') {
+  console.log(`  shipping game ${pinned} — could NOT reach the registry to check for a newer one`);
+} else if (isNewer(latestGame, pinned)) {
+  const message =
+    `the pinned game is ${pinned}, but ${latestGame} has been published.\n` +
+    `  This release would ship the OLD game. Either:\n` +
+    `    npm run game:update      # move to ${latestGame}, then re-run\n` +
+    `    npm run release -- ${bump} --keep-game   # deliberately stay on ${pinned}`;
+  if (!keepGame) fail(message);
+  console.log(`  shipping game ${pinned} deliberately (--keep-game); ${latestGame} is available`);
+} else {
+  console.log(`  shipping game ${pinned} (the newest published)`);
+}
 
 // --- preflight: does it actually work --------------------------------------
 
