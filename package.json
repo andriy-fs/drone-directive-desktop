@@ -1,8 +1,8 @@
 {
   "name": "drone-directive-desktop",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
-  "description": "Drone Directive as an offline desktop app \u2014 an Electron shell around the published browser build.",
+  "description": "Drone Directive as an offline desktop app — an Electron shell around the published browser build.",
   "license": "GPL-3.0-or-later",
   "author": {
     "name": "Andriy-fs",
