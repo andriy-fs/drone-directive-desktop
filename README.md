@@ -78,13 +78,24 @@ repository and cannot read another repository's packages.
 ### Bumping the game version
 
 ```bash
-# 1. edit package.json → dependencies["@andriy-fs/drone-directive-client"]
-npm install                 # refreshes package-lock.json
-npm run smoke               # boots the new build and asserts it renders
+npm run game:update         # move to the newest published game, then smoke-test it
 git commit -am 'chore: game 1.1.0'
 ```
 
 That is the whole upgrade. Nothing else in this repository knows the version.
+
+The pin stays **exact** — `npm run game:update` passes `--save-exact`, because
+npm's default would quietly rewrite it to `^1.1.0`. A range would buy nothing
+(`npm ci` installs what the lockfile says, ignoring it) and would assert that any
+future 1.x works with this shell, which nothing has checked: the shell is coupled
+to the game through PixiJS internals it does not control — see "The game is
+served from an origin" below.
+
+**Bumping the desktop version does not pick up a newer game.** They are separate
+numbers, and a desktop release cut without touching the pin ships the old game
+with nothing about the build looking wrong. `npm run release` refuses to proceed
+when the registry has a newer game than the pinned one; pass `--keep-game` to
+ship the older one deliberately.
 
 ---
 

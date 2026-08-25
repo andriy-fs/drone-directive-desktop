@@ -74,8 +74,11 @@ package lives in GitHub Packages, which has no anonymous read. See README
   decision in a code comment or in the README, where the reader will actually
   meet it; a commit message says what changed, once.
   See `.claude/skills/dd-desktop-conventions/SKILL.md`.
-- The game dependency is **pinned exactly** — no ranges, no `latest`. Upgrading
-  it is a deliberate one-line PR.
+- The game dependency is **pinned exactly** — no ranges, no `latest`. Upgrade it
+  with `npm run game:update` (which passes `--save-exact`; plain
+  `npm i pkg@latest` would rewrite the pin to `^`). Bumping the _desktop_ version
+  does not pick up a newer game — they are separate numbers, and `npm run release`
+  fails if the pin is behind the registry.
 - `resources/`, `out/` and `release/` are generated. Never edit anything in
   `resources/game/`: it is somebody else's build output, and patching it makes
   "pinned version" meaningless.
