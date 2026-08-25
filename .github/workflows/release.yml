@@ -40,15 +40,8 @@ jobs:
       # variable. The workflow's built-in GITHUB_TOKEN is scoped to *this*
       # repository and cannot read another repository's packages, so a classic PAT
       # with `read:packages` has to be stored as a repository secret.
-      # `package-lock.json` cannot be generated without a read:packages token, so
-      # the repository may not carry one yet. Once someone runs `npm install`
-      # with a token and commits the lockfile, this takes the `npm ci` branch on
-      # its own and builds become reproducible — no workflow change needed.
-      # See README § "The game dependency".
       - name: Install
-        shell: bash
-        run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+        run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}
 

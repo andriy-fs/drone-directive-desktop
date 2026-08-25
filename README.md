@@ -92,7 +92,7 @@ That is the whole upgrade. Nothing else in this repository knows the version.
 
 ```bash
 export NODE_AUTH_TOKEN=…
-npm install     # `npm ci` once package-lock.json is committed — see "Known gaps"
+npm ci
 npm start        # tsc → copy the game → electron .
 npm run smoke    # boot headless-ish and assert the game actually renders
 npm run dist     # installers for the current platform, into release/
@@ -223,10 +223,6 @@ an unsigned code path that runs without the user looking at it.
 
 ## Known gaps
 
-- **`package-lock.json` is not committed yet**, because it cannot be generated
-  until `@andriy-fs/drone-directive-client@1.0.0` is actually published (see
-  above). The CI install step already takes the `npm ci` branch automatically
-  once a lockfile exists, so committing one is the only step needed.
 - **`deb` cannot be built on every machine.** electron-builder shells out to
   `fpm`, whose bundled Ruby needs `libcrypt.so.1`. Where that is missing the
   AppImage still builds; CI's `ubuntu-latest` builds both.
