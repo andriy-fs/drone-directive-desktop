@@ -1,0 +1,102 @@
+appId: com.devfront.dronedirective
+productName: Drone Directive
+copyright: Copyright © 2026 Andriy-fs. GNU GPL v3 or later.
+
+directories:
+  output: release
+  buildResources: build
+
+# `out/` is the compiled shell and nothing else — a few hundred KB of main-process
+# JS. The game does *not* go in here; see `extraResources` below.
+#
+# The `node_modules` exclusion is load-bearing and not obvious: electron-builder
+# bundles production `dependencies` regardless of `files`, and this app's only
+# production dependency *is* the 29 MB game package. Without the exclusion every
+# installer carries the game twice — once in `app.asar`, once in `resources/game`
+# — and only the second copy is ever read. Nothing here needs anything from
+# `node_modules` at runtime.
+files:
+  - out/**/*
+  - package.json
+  - '!**/*.map'
+  - '!node_modules/**'
+
+asar: true
+
+# Why the game is `extraResources` and not `files`:
+#
+#  1. GPL. This app redistributes a GPL-3.0-or-later game, and its assets stay
+#     plain files the user can read, replace or extract with a file manager. An
+#     asar is not DRM, but burying somebody else's free software inside an archive
+#     is the wrong instinct for a licence built on the user's ability to get at it.
+#  2. Nothing is gained. asar does not compress, and 29 MB of .webp and .ogg are
+#     already compressed — packing them buys zero bytes while turning every one of
+#     ~340 asset reads per session into a read through the archive layer.
+#  3. The shell's own code still gets `asar: true`, which is what that flag is
+#     actually for: keeping the app's source in one tamper-evident blob.
+extraResources:
+  - from: resources/game
+    to: game
+    filter: ['**/*']
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+  # TODO(signing): set `certificateSubjectName`/`signtoolOptions` once an EV or
+  # OV code-signing certificate exists. Until then every download trips SmartScreen.
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Drone Directive
+
+portable:
+  artifactName: ${productName}-${version}-portable.${ext}
+
+mac:
+  category: public.app-category.strategy-games
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  # Hardened runtime and a Developer ID are what notarisation needs; neither
+  # exists yet, so the build is ad-hoc signed and Gatekeeper will object.
+  # TODO(signing): hardenedRuntime: true + entitlements, then `notarize: true`.
+  hardenedRuntime: false
+  identity: null
+
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+linux:
+  # Required by fpm for the .deb control file; it refuses to build without one.
+  # Kept in step with package.json#author.
+  maintainer: Andriy-fs <4tests.pl@gmail.com>
+  category: Game
+  # Without this the .desktop entry's name and the window's WM_CLASS disagree, and
+  # Linux desktops show a running match as a second, unnamed, iconless entry.
+  syncDesktopName: true
+  synopsis: A top-down real-time strategy game
+  description: Build, arm and program robots to destroy the enemy base before it destroys yours.
+  desktop:
+    entry:
+      Categories: Game;StrategyGame;
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+
+# Auto-update is out of scope for this pass. When it lands, `electron-updater`
+# reads a `latest*.yml` published beside the installers, which is what this
+# provider block emits; the app side is a `checkForUpdatesAndNotify()` call in
+# src/main/index.ts after `whenReady`.
+publish:
+  provider: github
+  owner: andriy-fs
+  repo: drone-directive-desktop

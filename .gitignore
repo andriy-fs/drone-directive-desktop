@@ -1,0 +1,16 @@
+node_modules
+
+# tsc output (src/ + scripts/), and the game tree copy-game.ts stages there
+out
+resources
+
+# electron-builder output
+release
+
+# npm/electron caches, editor and OS noise
+*.log
+.tmp
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json

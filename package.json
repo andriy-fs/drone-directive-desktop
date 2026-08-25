@@ -1,0 +1,45 @@
+{
+  "name": "drone-directive-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Drone Directive as an offline desktop app \u2014 an Electron shell around the published browser build.",
+  "license": "GPL-3.0-or-later",
+  "author": {
+    "name": "Andriy-fs",
+    "email": "4tests.pl@gmail.com"
+  },
+  "desktopName": "drone-directive-desktop.desktop",
+  "homepage": "https://github.com/andriy-fs/drone-directive-desktop",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andriy-fs/drone-directive-desktop.git"
+  },
+  "type": "module",
+  "main": "out/src/main/index.js",
+  "scripts": {
+    "build": "tsc && node out/scripts/copy-game.js",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder --config electron-builder.yml",
+    "dist:dir": "npm run build && electron-builder --config electron-builder.yml --dir",
+    "smoke": "npm run build && electron out/scripts/smoke.js",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "node --eval \"fs.rmSync('out',{recursive:true,force:true});fs.rmSync('resources',{recursive:true,force:true});fs.rmSync('release',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@andriy-fs/drone-directive-client": "1.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.15.3",
+    "electron": "^44.0.0",
+    "electron-builder": "^26.0.12",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.6",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.62.0"
+  }
+}

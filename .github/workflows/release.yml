@@ -1,0 +1,100 @@
+# Builds installers for the three desktop OSes on a `v*` tag and attaches them to
+# a GitHub Release.
+#
+# Only on a tag. `main` moves whenever the shell changes; a release is a
+# deliberate act, and each one pins one version of the game (package.json →
+# @andriy-fs/drone-directive-client).
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+# Needed to create the release and upload assets. Note that this token cannot
+# read the game package — see NODE_AUTH_TOKEN below.
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      # `.npmrc` points the @andriy-fs scope at GitHub Packages and reads this
+      # variable. The workflow's built-in GITHUB_TOKEN is scoped to *this*
+      # repository and cannot read another repository's packages, so a classic PAT
+      # with `read:packages` has to be stored as a repository secret.
+      # `package-lock.json` cannot be generated without a read:packages token, so
+      # the repository may not carry one yet. Once someone runs `npm install`
+      # with a token and commits the lockfile, this takes the `npm ci` branch on
+      # its own and builds become reproducible — no workflow change needed.
+      # See README § "The game dependency".
+      - name: Install
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}
+
+      - name: Check
+        run: |
+          npm run lint
+          npm run type-check
+
+      # Unsigned on purpose for now: no Developer ID, no Windows certificate.
+      # CSC_IDENTITY_AUTO_DISCOVERY=false stops electron-builder picking up a
+      # random keychain identity on the macOS runner and producing a build signed
+      # by nobody in particular.
+      - name: Build installers
+        run: npm run dist -- --publish never
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.name }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.AppImage
+            release/*.deb
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: installers
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: installers/*
+          draft: false
+          generate_release_notes: true
+          body: |
+            ### Unsigned builds
+
+            These binaries are not code-signed. macOS will refuse the first launch
+            (right-click → Open, or System Settings → Privacy & Security → Open
+            Anyway); Windows SmartScreen will warn (More info → Run anyway).
+            Signing is tracked as an issue.

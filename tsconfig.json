@@ -1,0 +1,35 @@
+{
+  /**
+   * One project, not a solution: everything here is Node/Electron ESM running on
+   * the same runtime, so a second tsconfig would only duplicate this one. The
+   * game's own sources are never compiled — it arrives prebuilt (see README).
+   *
+   * `rootDir: "."` is why the output is `out/src/main/…` and `out/scripts/…`
+   * rather than `out/main/…`: it keeps a single `tsc` invocation for both trees,
+   * which is worth more than a prettier path. `package.json#main` points at it.
+   */
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "skipLibCheck": true,
+
+    "rootDir": ".",
+    "outDir": "out",
+    "sourceMap": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+
+    /* Linting */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true
+  },
+  "include": ["src", "scripts"],
+  "exclude": ["out", "resources", "release"]
+}
