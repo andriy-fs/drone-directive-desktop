@@ -1,4 +1,5 @@
 import { app, dialog, Menu, shell, type MenuItemConstructorOptions } from 'electron';
+import { checkForUpdate } from './update-check.js';
 
 const REPOSITORY = 'https://github.com/andriy-fs/drone-directive';
 const DESKTOP_REPOSITORY = 'https://github.com/andriy-fs/drone-directive-desktop';
@@ -39,6 +40,14 @@ export function buildMenu(isDevelopment: boolean): void {
     label: isMac ? app.name : '&Game',
     submenu: [
       { label: 'About Drone Directive', click: about },
+      // Always here, even when the automatic check is switched off: asking is a
+      // different thing from being told, and the flag only silences the latter.
+      {
+        // The id is what lets the smoke/e2e driver fire this item without a mouse.
+        id: 'check-for-updates',
+        label: 'Check for Updates…',
+        click: () => void checkForUpdate({ interactive: true }),
+      },
       { type: 'separator' },
       ...(isMac
         ? ([{ role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }] as const)

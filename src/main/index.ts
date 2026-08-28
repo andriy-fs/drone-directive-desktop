@@ -3,6 +3,7 @@ import { hideFullScreenHint, showFullScreenHint } from './fullscreen-hint.js';
 import { assertGamePresent, gameRoot } from './game.js';
 import { buildMenu } from './menu.js';
 import { handleProtocol, ORIGIN } from './protocol.js';
+import { scheduleUpdateCheck } from './update-check.js';
 import { loadWindowState, MIN_SIZE, trackWindowState } from './window-state.js';
 
 /** The game's own page colour, so the window never flashes white before the first paint. */
@@ -126,6 +127,8 @@ function createWindow(): void {
     if (state.fullScreen) window.setFullScreen(true);
     else if (state.maximized) window.maximize();
     window.show();
+    // Well after the window is up, and only in a packaged build — see update-check.ts.
+    scheduleUpdateCheck();
   });
 
   void window.loadURL(`${ORIGIN}/index.html`);

@@ -101,3 +101,8 @@ package lives in GitHub Packages, which has no anonymous read. See README
 
 Auto-update, code signing and notarisation, store packaging, gamepad support,
 and any change whatsoever to the game's own source. Each is a follow-up issue.
+
+Auto-update means _installing_: the update **check** in `src/main/update-check.ts`
+is in scope and shipped — it asks the relay for the newest version and, at most,
+opens the releases page. See README § "What this app sends" for what it discloses,
+and why that section exists.

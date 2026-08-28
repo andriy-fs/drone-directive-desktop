@@ -116,6 +116,40 @@ be built where: [`.docs/building.md`](.docs/building.md).
 
 ---
 
+## What this app sends
+
+Once per launch, a packaged build asks the game's relay whether a newer release of
+this shell exists:
+
+```
+GET https://relay.drone-directive.space/desktop/version?shell=0.1.8&os=linux&arch=x64
+```
+
+That is the whole request. It carries the app version, the operating system and the
+CPU architecture — **no identifier of any kind**, nothing about the machine, nothing
+about what you play. The server records those three fields plus the country
+Cloudflare derives from the connection, which means it counts _launches_, not
+people; your IP address is never written down. If a newer version exists you are
+offered the releases page, and nothing is downloaded or installed without you: this
+app has no auto-update.
+
+It is also the project's only way of knowing the desktop build has any users at all,
+which is stated here rather than left to be discovered.
+
+Turn it off with a launch flag, or the environment variable of the same meaning:
+
+```bash
+drone-directive-desktop --no-update-check
+DD_NO_UPDATE_CHECK=1 drone-directive-desktop
+```
+
+With it off, and until you go online in a multiplayer match, the app makes no
+network requests whatsoever. **Game → Check for Updates…** always works, flag or
+not — asking is not the same as being told. Development runs (`npm start`,
+`npm run smoke`, CI) never send it: the check is packaged-builds-only.
+
+---
+
 ## How it works
 
 ### The game is served from an origin, not from `file://`
