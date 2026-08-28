@@ -1,4 +1,5 @@
 import { app, BrowserWindow, shell } from 'electron';
+import { hideFullScreenHint, showFullScreenHint } from './fullscreen-hint.js';
 import { assertGamePresent, gameRoot } from './game.js';
 import { buildMenu } from './menu.js';
 import { handleProtocol, ORIGIN } from './protocol.js';
@@ -8,6 +9,12 @@ import { loadWindowState, MIN_SIZE, trackWindowState } from './window-state.js';
 const BACKGROUND = '#0d1117';
 
 const isDevelopment = !app.isPackaged;
+
+/**
+ * Held rather than looked up: the fullscreen hint is a second `BrowserWindow`,
+ * so `getAllWindows()[0]` is no longer reliably the game.
+ */
+let gameWindow: BrowserWindow | null = null;
 
 /**
  * Two copies of an RTS is never what the user wants — the second one would fight
@@ -22,10 +29,9 @@ if (!app.requestSingleInstanceLock()) {
 
 function main(): void {
   app.on('second-instance', () => {
-    const [window] = BrowserWindow.getAllWindows();
-    if (!window) return;
-    if (window.isMinimized()) window.restore();
-    window.focus();
+    if (!gameWindow) return;
+    if (gameWindow.isMinimized()) gameWindow.restore();
+    gameWindow.focus();
   });
 
   app.whenReady().then(() => {
@@ -36,7 +42,7 @@ function main(): void {
 
     // macOS keeps the app alive with no windows; clicking the dock icon reopens one.
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+      if (!gameWindow) createWindow();
     });
   });
 
@@ -76,8 +82,45 @@ function createWindow(): void {
     },
   });
 
+  gameWindow = window;
+  window.on('closed', () => {
+    gameWindow = null;
+  });
+
   trackWindowState(window);
   guardNavigation(window);
+
+  // Fullscreen the *page* asked for, through `requestFullscreen()` — the game's
+  // own titlebar button. Chromium paints its own "Press Esc to exit full screen"
+  // for that one, so the shell's bubble has to stay out of its way: two banners
+  // naming two different keys is worse than either alone. The View menu's
+  // fullscreen is still the case the bubble exists for (see fullscreen-hint.ts).
+  let htmlFullScreen = false;
+  window.webContents.on('enter-html-full-screen', () => {
+    htmlFullScreen = true;
+    // In case the window event won the race and the bubble is already up.
+    hideFullScreenHint();
+  });
+  window.webContents.on('leave-html-full-screen', () => {
+    htmlFullScreen = false;
+  });
+
+  // Restoring a remembered fullscreen state below fires this too, which is
+  // exactly right: launching straight into fullscreen is the case where the user
+  // has had no chance to see the View menu at all.
+  //
+  // Deferred by a tick because `enter-full-screen` (the window) and
+  // `enter-html-full-screen` (its contents) are not ordered against each other,
+  // so a same-turn read of the flag would sometimes come too early. The window is
+  // re-checked instead of the timer being cancelled: leaving fullscreen again
+  // within one tick is the only thing that could invalidate it.
+  window.on('enter-full-screen', () => {
+    setTimeout(() => {
+      if (!htmlFullScreen && !window.isDestroyed() && window.isFullScreen()) showFullScreenHint(window);
+    }, 0);
+  });
+  window.on('leave-full-screen', hideFullScreenHint);
+  window.on('close', hideFullScreenHint);
 
   window.once('ready-to-show', () => {
     if (state.fullScreen) window.setFullScreen(true);
