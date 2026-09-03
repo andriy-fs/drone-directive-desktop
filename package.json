@@ -31,7 +31,7 @@
     "clean": "node --eval \"fs.rmSync('out',{recursive:true,force:true});fs.rmSync('resources',{recursive:true,force:true});fs.rmSync('release',{recursive:true,force:true})\""
   },
   "dependencies": {
-    "@andriy-fs/drone-directive-client": "1.2.9"
+    "@andriy-fs/drone-directive-client": "1.2.12"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
